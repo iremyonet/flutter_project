@@ -9,12 +9,11 @@ class BackgroundImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
               image: AssetImage('assets/images/login_bg.png'),
               fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                  (Colors.black26), BlendMode.lighten)),
+             ),
         ),
       ),
     );

@@ -1,187 +1,217 @@
-import 'package:elektraweb_operator/screens/palatte.dart';
-import 'package:flutter/material.dart';
-import 'package:elektraweb_operator/widgets/widgets.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:elektraweb_operator/widgets/password_input.dart';
-import 'package:elektraweb_operator/widgets/text-input.dart';
+import 'package:elektraweb_operator/screens/info.dart';
 
-class LoginPage extends StatefulWidget {
+import '/widgets/custom_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class Login extends StatefulWidget {
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  _LoginState createState() => _LoginState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginState extends State<Login> {
+  bool _obscureText = true;
+  bool _rememberMe = false;
+  final usercodeController = TextEditingController();
+  final tenantController = TextEditingController();
+  final passwordController = TextEditingController();
+  final actionController = TextEditingController();
   @override
+  void dispose() {
+    usercodeController.dispose();
+    passwordController.dispose();
+    tenantController.dispose();
+    actionController.dispose();
+    super.dispose();
+  }
 
-  bool isRememberMe=false;
-
-  Widget buildRememberCb(){
+  Widget _buildRememberMeCheckbox() {
     return Container(
-      decoration: BoxDecoration(
-          color: Color(0x00000000),
-          borderRadius: BorderRadius.circular(13),
-      ),
+      height: 45.0,
       child: Row(
-        children: <Widget> [
+        children: <Widget>[
           Theme(
-              data: ThemeData(unselectedWidgetColor:Colors.black,),
-              child:Checkbox(
-                value: isRememberMe,
-                checkColor: Colors.green,
-                activeColor: Colors.black,
-                onChanged: (value){
-                  setState(() {
-                    isRememberMe=value!;
-                  });
-                },
-              )
+            data: ThemeData(unselectedWidgetColor: Colors.blue),
+            child: Checkbox(
+              value: _rememberMe,
+              checkColor: Colors.green,
+              activeColor: Colors.transparent,
+              onChanged: (value) {
+                setState(() {
+                  _rememberMe = value!;
+                });
+              },
+            ),
           ),
-          Text(
+          const Text(
             'Beni Hatırla',
             style: TextStyle(
-                color:Colors.black87,
-                fontWeight: FontWeight.bold,
-              fontFamily: 'Open Sans',
-              fontSize: 14,
+              fontSize: 17,
               fontStyle: FontStyle.italic,
             ),
-          )
-
+          ),
         ],
       ),
     );
   }
 
+  getData(String tenant, String usercode, String password) async {
+    var response = await http
+        .post(Uri.parse("https://4001.hoteladvisor.net"),
+            body: jsonEncode(<String, String>{
+              "Action": "Login",
+              "Usercode": "$usercode",
+              "Password": "$password",
+              "Tenant": "$tenant",
+            }))
+        .then((value) {
+      var data = jsonDecode(value.body);
+      if (data["Success"] == true) {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Information(
+                      data: data,
+                    )));
+        print("Başarılı ${data["Success"]}");
+      } else {
+        print(" ${data["Success"]}");
+        showDialog(
+            context: context,
+            builder: (context) {
+              return const AlertDialog(
+                content: Text("Lütfen bilgileri kontrol ediniz"),
+              );
+            });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          BackgroundImage(),
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            body: SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Container(
-                      child: Center(
-                        child: Text(''),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 250,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Column(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10.0),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      color: Color(0xA6d4c6bb),
-                                      borderRadius: BorderRadius.circular(13)),
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                        focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(13.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xFFe30d18),
-                                            )),
-                                        labelText: 'Tenant',
-                                        prefixIcon: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          child: Icon(
-                                            FontAwesomeIcons.solidBookmark,
-                                            color: Color(0xFFe30d18),
-                                            size: 22,
-                                          ),
-                                        ),
-                                        labelStyle: kBodyText,
-                                        border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0xFFe30d18),
-                                          ),
-                                        )),
-                                    style: kBodyText,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.next,
-                                  ),
-                                ),
+        backgroundColor: Color(0xffc9e0ef),
+        body: Container(
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                HeroImage(imgHeight: MediaQuery.of(context).size.height * 0.40),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 10, 10, 10),
+                  child: Form(
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              border: UnderlineInputBorder(),
+                              prefixIcon: Icon(Icons.account_balance_sharp),
+                              labelText: 'Tenant',
+                              labelStyle: TextStyle(
+                                fontSize: 18,
                               ),
-                              TextInput(
-                                icon: FontAwesomeIcons.solidEnvelope,
-                                label: 'Kullanıcı adi',
-                                inputAction: TextInputAction.next,
-                                inputType: TextInputType.emailAddress,
-                              ),
-                              PasswordInput(
-                                icon: FontAwesomeIcons.lock,
-                                hint: 'Şifre',
-                                inputAction: TextInputAction.done,
-                              ),
-                              Text(
-                                'Şifrenizi mi unuttunuz?',
-                                style: TextStyle(
-                                  color: Color(0xff000000),
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                              buildRememberCb(),
-                            ],
+                            ),
+                            controller: tenantController,
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return 'Tenant can/t be empty';
+                              }
+                              return null;
+                            },
                           ),
-                          Column(
-                            children: [
-                              SizedBox(height: 40),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                    color: Color(0xD9d4c6bb),
-                                    borderRadius: BorderRadius.circular(13)),
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    textStyle: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Open Sans',
-                                    ),
-                                  ),
-                                  onPressed: () {},
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10.0),
-                                    child: Text(
-                                      'Giriş yap',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        color: Colors.black,
-                                        fontFamily: 'Open Sans',
-                                      ),
-                                    ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.account_circle),
+                              labelText: 'Kullanıcı kodu',
+                              border: UnderlineInputBorder(),
+                              labelStyle: TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                            controller: usercodeController,
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return 'user  code can/t be empty';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: TextFormField(
+                            keyboardType: TextInputType.text,
+                            decoration: InputDecoration(
+                              border: UnderlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              prefixIcon: Icon(Icons.lock),
+                              suffixIcon: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText;
+                                  });
+                                },
+                                child: Icon(_obscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off),
+                              ),
+                              labelText: 'Şifre',
+                              labelStyle: const TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                            controller: passwordController,
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return 'password can/t be empty';
+                              }
+                              return null;
+                            },
+                            obscureText: _obscureText,
+                          ),
+                        ),
+                        _buildRememberMeCheckbox(),
+                        SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: () async {
+                            String tenant = tenantController.text;
+                            String usercode = usercodeController.text;
+                            String password = passwordController.text;
+                            String action = actionController.text;
+
+                            await getData(tenant, usercode, password);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(18.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  "Giriş Yap",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
                                   ),
                                 ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
+                                SizedBox(width: 10),
+                                Icon(Icons.arrow_forward)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        ));
   }
 }
